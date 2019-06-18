@@ -6,7 +6,7 @@
             [flc.process :as process :refer [process*]]
             [flc.program :as program]
             [flc.let-like :as let-like]
-            [flc.component :as component :refer [component]]
+            [flc.component :as component]
             [flc.map-like :as m]
             [clojure.set :as set]))
 
@@ -27,18 +27,37 @@
                 f (compile graph)]
             (f {})))
   (expect {:foo 3
-           :foobar 8}
+           :foobar 8
+           :foobar' 9}
           (let [graph (merge (constants {:foo 3})
                              {:foobar (fnk' [foo bar]
-                                            (+ foo bar))})
+                                            (+ foo bar))
+                              :foobar' (fnk' [foobar]
+                                             (inc foobar))})
                 f (compile graph)]
             (f {:bar 5}))))
 
+(defexpect ->process-test
+  (expect [[:foo 3]
+           [:bar 5]
+           [:foobar 8]
+           [:foobar' 9]]
+          (let [computations {:foobar (fnk' [foo bar]
+                                            (+ foo bar))
+                              :foobar' (fnk' [foobar]
+                                             (inc foobar))}]
+            (->> computations
+                 ->components
+                 (concat (core/constants [[:foo 3]
+                                          [:bar 5]]))
+                 core/start!
+                 core/states))))
+
 (defmacro computation [name args expr]
-  `['~name (component (program/clean (fn ~args ~expr)) '~args)])
+  `['~name (component/component (program/clean (fn ~args ~expr)) '~args)])
 
 (defmacro constant [name expr]
-  `['~name (component (program/constant ~expr))])
+  `['~name (component/component (program/constant ~expr))])
 
 (defexpect lab
   (expect [['foo 3]]
