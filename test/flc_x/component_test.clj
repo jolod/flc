@@ -26,3 +26,12 @@
     (expect #{:x :my-component} (set (keys states)))
     (expect :X (-> states :x))
     (expect [:start] (-> states :my-component :log deref))))
+
+(defexpect ->flc-test
+  (let [system' (component/system-map :x :X
+                                      :my-component (-> (my-component) (component/using [:x])))
+        started (simple/start! (system system'))
+        states (into {} (core/states started))]
+    (expect #{:x :my-component} (set (keys states)))
+    (expect :X (-> states :x))
+    (expect [:start] (-> states :my-component :log deref))))
