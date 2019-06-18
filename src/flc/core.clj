@@ -22,11 +22,22 @@
              deps])
           components))
 
+(defn -map-state-from-args [component]
+  (component/update-program component
+                            #(fn [& args]
+                               (apply % (map process/state args)))))
+
+(defn ->let-like
+  "Turns a sequence of components into a sequence of computations that works with e.g. `arrange` and `run` from `flc.let-like`."
+  [components]
+  (->> components
+       (m/fmap -map-state-from-args)
+       (m/fmap component/->let-like)))
+
 (defn start! [components]
   (->> components
-       (m/fmap component/->let-like)
+       ->let-like
        let-like/arrange
-       -processify
        let-like/run
        :results))
 
