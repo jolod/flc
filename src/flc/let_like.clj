@@ -64,19 +64,55 @@
                        :dependencies deps})))
     (map (juxt identity (m/->map computations)) order)))
 
-(defn run
-  "Takes a sequence of bindings, where a binding has the form `[name [f names]]`, and returns a sequence of the form `[name result]` where `result` is the result from applying the corresponding function `f` with the results from the bindings named in `names`. If a name occurs multiple times then shadowing is applied, just like in a `let` binding.
+(defn bind*
+  "Considered private for now."
+  [{:keys [results env]} binding']
+  (let [[name [func arg-names]] binding'
+        result (apply func (map #(get env %) arg-names))]
+    {:results (conj results [name result])
+     :env (assoc env name result)}))
 
-  The return sequence is in reverse input order.
+(defn run
+  "Takes a sequence of bindings, where a binding has the form `[name [f names]]`, and returns a map with keys `:results` and `:env`. `:results` holds a sequence of the form `[name result]` where `result` is the result from applying the corresponding function `f` with the results from the bindings named in `names`. If a name occurs multiple times then shadowing is applied, just like in a `let` binding. In contrast to a `let` binding, if a name has not been bound before being used as a dependency then it will resolve to `nil`.
+
+  The `:results` sequence is in reverse order compared to `bindings`. `:env` is the map corresponding to the last bound value for each name.
 
   Optionally, a second map-like argument can be provided which contains results to be used by the provided bindings."
   ([bindings]
    (run {} bindings))
-  ([init-env bindings]
-   (reduce (fn [{:keys [results env]} [name [func arg-names]]]
-             (let [result (apply func (map env arg-names))]
-               {:results (cons [name result] results)
-                :env (assoc env name result)}))
+  ([env bindings]
+   (reduce bind*
            {:results nil
-            :env (m/->map init-env)}
+            :env env}
            bindings)))
+
+(defn missing
+  "Takes a sequence of `[name names]` where `names` are the dependencies of `name` (such as given by the `dependencies` function). Returns a sequence of `[name missing-names]`, ordered as the input sequence, where `missing-names` is a set of the names that does not occur before `name`.
+
+  Examples
+
+      [[:x nil], [:y [:x]]] => [[:x #{}], [:y #{}]]
+      [[:x nil], [:y [:x]]] => [[:y #{:x}]]
+      [[:x nil], [:x [:x]]] => [[:x #{}], [:x #{}]]
+
+  The last example shows that shadowing is supported."
+  [dependencies]
+  (->> (for [[name deps] dependencies]
+         [name [(fn [& args]
+                  (->> (map vector deps args)
+                       (filter #(nil? (second %))) ; If a dependency is nil, it is missing.
+                       (map first)
+                       set)) ; Always return a set, i.e. not nil.
+                deps]])
+       run
+       :results
+       reverse))
+
+(defn complete?
+  "Returns true if there are no missing dependencies in the given bindings."
+  [bindings]
+  (->> bindings
+       dependencies
+       missing
+       m/vals
+       (every? empty?)))
