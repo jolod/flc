@@ -69,41 +69,12 @@
   (let [ks (set ks)]
     (filter #(contains? ks (first %)) m)))
 
-; (defn update [m k f & more]
-;   (if (map? m)
-;     (apply clojure.core/update m k f more)
-;     (for [item m]
-;       (if (= (first item) k)
-;         (update-second item #(apply f % more))
-;         item))))
-
-; (defn get
-;   "Like `clojure.core/get`, but returns a seq of values instead of just a value. If no keys match `k` then nil, or `d` if specified, is returned.
-
-;   Note: `d` is not put as a single value in a seq, so `[:foo]` or equivalent should be used if you want `:foo` to be the default value if the key is absent. Similarly, `[]` or equivalent should be used if you want a true but empty seq as the default."
-;   ([m k]
-;    (vals (select-keys m [k])))
-;   ([m k d]
-;    (or (get m k)
-;        d)))
-
 (defn dissoc
   "Removes all items with the specified key."
   [m k]
-  (filter #(not= k (first %)) m))
-
-; (defn assoc
-;   "Replaces the last occurance of the key with the specified value and removes all other. If the key does not exist then the item is appended. It is in fact allowed to associate more than just a value with a key, through `assoc m k v w`. Note that this means that you cannot associate more than one key at a time, in contrast with `clojure.core/assoc`. If `m` is a map then `clojure.core/map` is used, unless you pass more than just a value in which case it is turned into a seq and you get linear performance."
-;   [m k v & more]
-;   (if (and (map? m)
-;            (nil? more))
-;     (clojure.core/assoc m k v)
-;     (let [item (cons' k v more)
-;           [rev-tail rev-init] (split-with #(not= (first %) k)
-;                                           (reverse m))]
-;       (if-let [[_ & rev-init] (seq rev-init)]
-;         (reverse (concat rev-tail [item] (dissoc rev-init k)))
-;         (concat m [item])))))
+  (if (map? m)
+    (clojure.core/dissoc m k)
+    (filter #(not= k (first %)) m)))
 
 (defn assoc
   "Replaces the last occurance of the key with the specified value and removes all other. If the key does not exist then the item is appended. It is in fact allowed to associate more than just a value with a key, through `assoc m k v w`. Note that this means that you cannot associate more than one key at a time, in contrast with `clojure.core/assoc`. If `m` is a map then `clojure.core/map` is used, unless you pass more than just a value in which case it is turned into a seq and you get linear performance."

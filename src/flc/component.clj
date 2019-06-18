@@ -1,19 +1,6 @@
 (ns flc.component
   (:require [flc.map-like :as m]))
 
-; (defn component
-;   ([program]
-;    (component program nil))
-;   ([program dependencies]
-;    [program dependencies]))
-
-; (def program first)
-
-; (def dependencies second)
-
-; (defn update-program [component f]
-;   (m/update-first component f))
-
 (defn component
   ([program]
    (component program nil))

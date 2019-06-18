@@ -1,6 +1,6 @@
 # flc - functional life cycles
 
-*flc* is a functional formulation of life cycles, sporting ad hoc logging (*[flc-x/log]*), exception handling (*[flc-x/try]*), asynchronous start (*[flc-x/future]*), etc, and with minimal effort the dependency on `flc.core` can be removed. Through adapters you can mix and match components from *[stuartsierra/component][component]* and *[weavejester/integrant][integrant]*, this too, ad hoc (see *[flc-x/component]* and *[flc-x/integrant]*).
+*flc* is a functional formulation of life cycles, sporting ad hoc logging (*[flc-x/log]*), exception handling (*[flc-x/try]*), asynchronous start (*[flc-x/future]*), etc, and with minimal effort the dependency on `flc.core` can be removed. Through adapters you can mix and match components from *[stuartsierra/component][component]* and *[weavejester/integrant][integrant]*, this too, ad hoc.
 
 ## Synopsis
 
@@ -56,10 +56,6 @@ A sequence of named components can be arranged such that any program that is nee
 The primary user-facing functions in *flc* are re-exported through `flc-x.simple` (*[flc-x/simple]*) which satisfies the needs for simple systems. The functions in *flc* make for a flexible core to build more advanced systems with, see *Extensions* below.
 
 See `docs/derivation.md` for a detailed background of the design of this library.
-
-## WARNING
-
-The documentation is currently slightly out of date. In particular, components are now encoded using a map instead of a tuple.
 
 ## Extensions
 
@@ -431,7 +427,9 @@ There is another good reason for not providing too much out of the box. It encou
 
 ### Migrating away from *flc*
 
-In case you want to migrate away from *flc*, and are only effectively using `process`, `lifecycle`, and `start!`, then you can rewrite the following,
+If you don't use any extensions then *flc* is mostly useful during development. For a production build you might want to get rid of the dependency on *flc'.
+
+In that case, if you are only effectively using `process`, `lifecycle`, and `start!`, then you can rewrite the following,
 
 ```clojure
 (ns no-flc
