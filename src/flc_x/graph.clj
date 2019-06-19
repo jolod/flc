@@ -16,6 +16,7 @@
 (defn compile
   "A drop-in replacement for graph/compile."
   [computations]
+  {:pre [(map? computations)]}
   (let [all-deps (mapcat second (let-like/dependencies computations))
         missing (set/difference (set all-deps) (set (keys computations)))
         ; Note: Prepending and dropping dummy computations works because let-like/arrange is stable.
@@ -26,7 +27,6 @@
     (fn [m]
       (->> computations
            (let-like/run m)
-           :results
            m/->map))))
 
 (defn ->components

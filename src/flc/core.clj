@@ -39,7 +39,7 @@
        ->let-like
        let-like/arrange
        let-like/run
-       :results))
+       rseq))
 
 (defn states
   "Takes the output of `start!` and returns a map-like sequence of states, in starting order (i.e. reverse input order)."

@@ -34,9 +34,7 @@
 (defn run [components]
   (->> components
        (m/fmap component/->let-like)
-       let-like/run
-       :results
-       reverse))
+       let-like/run))
 
 (defexpect flc.recurrent-test
   (let [components (simple/components {:foo [(counter 0)]})
