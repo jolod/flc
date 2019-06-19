@@ -42,6 +42,20 @@
 ;             :webserver {:port 8080}})
 ```
 
+## Rationale
+
+Do we need another component library? Aren't *[component]* and *[integrant]* (or *[mount]*) enough?
+
+Well, *flc* does a little more and a little less than *component* and *integrant*. *flc* can be used instead of *[plumatic/graph]* even.
+
+The big selling point of *flc* is that the system is extensible by its open design. *flc* is not a framework like *component* and *integrant*; *flc* is just a collection of functions that you compose. Importantly, you can ad hoc wrap the components to enrich the life cycles.
+
+For instance, with *flc* you can with a simple function add exception handling during start for all your components or logging of the start and stop functions, without changing the source code of the components. You can "import" components from *component* or *integrant*, and then add logging to them.
+
+If you have a slow-running *graph*, where the computations dominate the function invocation overhead, you can use the drop-in replacement library *[flc-x/graph]* and add logging with *flc*. You can also make the computations run in futures to speed up the computation, while also logging.
+
+Extensions like these can be stacked, and since wrapping e.g. a *component* component is just another extension, you can take your existing *component* system, turn it into an *flc* system (see `flc-x.component/system`), and then start it as if it was an *flc* system and make use of all the extensions (see below for a partial list), without any change to your existing component code.
+
 ## Description
 
 *flc* is built on a couple of concepts:
@@ -232,7 +246,7 @@ and thus we get
                      components))))
 ```
 
-The `let`'s body can be refactored, and we end up with
+The `let`'s body can be refactored into a function, let's call it `run`, and we end up with
 
 ```clojure
 (defn start! [components]
@@ -240,7 +254,7 @@ The `let`'s body can be refactored, and we end up with
                      [name [(fn [& args]
                               (apply program (map :state args)))
                             deps]])]
-    (let-like/run components)))
+    (run components)))
 ```
 
 Exactly the same principle is used for asynchronous start, exception handling, etc, except those extension also manipulate the return value.
@@ -497,8 +511,10 @@ your option) any later version.
 
 [integrant]: https://github.com/weavejester/integrant
 [component]: https://github.com/stuartsierra/component
+[mount]: https://github.com/tolitius/mount
 [yoyo]: https://github.com/jarohen/yoyo
 [cats]: https://github.com/funcool/cats
+[plumatic/graph]: https://github.com/plumatic/plumbing
 
 [flc-x/simple]: src/flc_x/simple.clj
 [flc-x/log]: src/flc_x/log.clj
