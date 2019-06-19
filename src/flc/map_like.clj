@@ -3,7 +3,7 @@
 
   A map-like data structure is typically used because either order is important, the same key can occur multiple times with different values, or both.
 
-  Construction is done using the regular seq functions. For instance, `concat` is the equivalent of `merge`. `count` gives the size (which is different from the number of distinct keys). There is a special `assoc` (and `dissoc`) function that respect order and makes sure there is only one item with the specified key, but if you find that you use `assoc` a lot you should probably use another data structure instead.
+  Construction is done using the regular seq functions. For instance, `concat` is the equivalent of `merge`. `count` gives the size (which is different from the number of distinct keys). There is a special `assoc` (and `dissoc`) function that respects order and makes sure there is only one item with the specified key, but if you find that you use `assoc` a lot you should probably use another data structure instead.
 
   Maps are preserved as much as possible for performance reasons. That means that if you do an operation that is polymorphic, such as `into`, you probably want to use `seq` or `->map` first so you know what the result will be."
   (:refer-clojure :exclude [keys vals select-keys update get assoc dissoc]))
@@ -77,7 +77,7 @@
     (filter #(not= k (first %)) m)))
 
 (defn assoc
-  "Replaces the last occurance of the key with the specified value and removes all other. If the key does not exist then the item is appended. It is in fact allowed to associate more than just a value with a key, through `assoc m k v w`. Note that this means that you cannot associate more than one key at a time, in contrast with `clojure.core/assoc`. If `m` is a map then `clojure.core/map` is used, unless you pass more than just a value in which case it is turned into a seq and you get linear performance."
+  "Replaces the last occurance of the key with the specified value and removes all other. If the key does not exist then the item is appended."
   [m k v]
   (if (map? m)
     (clojure.core/assoc m k v)
