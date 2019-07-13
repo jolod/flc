@@ -41,6 +41,12 @@
        let-like/run
        rseq))
 
+(defn arrange [components]
+  (->> components
+       (m/fmap (juxt identity component/dependencies))
+       let-like/arrange
+       (m/fmap first)))
+
 (defn states
   "Takes the output of `start!` and returns a map-like sequence of states, in starting order (i.e. reverse input order)."
   [started]
