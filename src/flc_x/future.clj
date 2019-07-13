@@ -7,7 +7,7 @@
 
 (defn ->future [program]
   (fn [& args]
-    (let [p (delay (apply program (pmap deref args)))]
+    (let [p (delay (apply program (map deref args)))]
       (process* (future (process/state @p))
                 #(process/stop! @p)))))
 
