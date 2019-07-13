@@ -18,3 +18,11 @@
             (process/stop! process)
             {:a @a
              :state (process/state process)})))
+
+(defexpect -compose
+  (expect -10
+          (-> 4
+              ((compose (clean -)
+                        (clean #(* 2 %))
+                        (clean inc)))
+              process/state)))
