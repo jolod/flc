@@ -4,7 +4,8 @@
             [flc.program :as program]
             [flc.component :as component]
             [flc.map-like :as m]
-            [flc.core :as core]))
+            [flc.core :as core]
+            [flc-x.kw-args :as kw-args]))
 
 (def process process/process)
 
@@ -41,3 +42,5 @@
   "The composition of `flc.core/states` and `flc.map-like/->map`."
   [processes]
   (m/->map (core/states processes)))
+
+(def kw-component kw-args/component)
