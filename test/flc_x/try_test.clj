@@ -4,19 +4,19 @@
             [flc.core :as core]
             [flc.process :as process :refer [process*]]
             [flc.program :as program]
+            [flc.component :as component :refer [component]]
             [flc.let-like :as let-like]
             [flc.map-like :as m]
-            [flc-x.simple :as simple]
             [clojure.set :as set]))
 
 (defn constant [x]
-  [(program/constant x)])
+  (component (program/constant x)))
 
 (defn constant' [name x]
   [name (constant x)])
 
 (defn clean [f & deps]
-  [(program/clean f) deps])
+  (component (program/clean f) deps))
 
 (defn format-exception [exception]
   (let [data (ex-data exception)]
@@ -35,7 +35,6 @@
           (->> {:foo (constant "FOO")
                 :bar (constant "BAR")
                 :foobar (clean str :foo :bar)}
-               simple/components
                try-all
                core/start!
                core/states
@@ -53,7 +52,6 @@
           (->> {:foo (clean (fn [] (/ 1 0)))
                 :bar (constant "BAR")
                 :foobar (clean str :foo :bar)}
-               simple/components
                try-all
                core/start!
                core/states
@@ -65,45 +63,60 @@
           (->> {:foo (clean (fn [] (/ 1 0)))
                 :bar (constant "BAR")
                 :foobar (clean str :foo :bar)}
-               simple/components
                try-all
                core/start!
                core/states
-               states->graph))
+               failing-dependencies))
 
 ; This illustrates how to use start! and try-all to stop safely.
   (expect [[:foobar nil]
            [:bar [:foobar]]
            [:foo [:foobar]]]
           (let [components [(constant' :x :X)
-                            [:foo [(fn []
-                                     (process* :FOO #(throw (Exception. "Failed to stop foo"))))]]
+                            [:foo (component (fn []
+                                               (process* :FOO #(throw (Exception. "Failed to stop foo")))))]
                             (constant' :bar :BAR)
-                            [:foobar [(program/lifecycle vector
-                                                         (fn [_]
-                                                           (throw (Exception. "Failed to stop foobar"))))
-                                      [:foo :bar]]]]
+                            [:foobar (component (program/lifecycle vector
+                                                                   (fn [_]
+                                                                     (throw (Exception. "Failed to stop foobar"))))
+                                                [:foo :bar])]]
                 dependents (apply merge-with
                                   set/union
-                                  (for [[name [_ dependencies]] components
-                                        dependency dependencies]
+                                  (for [[name component] components
+                                        dependency (component/dependencies component)]
                                     {dependency (set [name])}))
-                started (core/start! (simple/components components))
-                foo (for [[name process] started
-                          :let [stop (process/stop process)]]
-                      [name [(fn [& args]
-                               (process* (stop)))
-                             (dependents name)]])]
-            (assert (= (let-like/arrange foo) foo))
+                started (core/start! components)
+                foo (m/fmap-keyed (fn [name process]
+                                    (let [stop (process/stop process)]
+                                      (component (fn [& args]
+                                                   (process* (stop)))
+                                                 (dependents name))))
+                                  started)]
+            (assert (= (core/arrange foo) foo))
             (->> foo
-                 simple/components
                  try-all
                  core/start!
                  core/states
-                 states->graph)))
+                 failing-dependencies)))
 
   (expect Exception ; This just shows that "type" errors are not caught, as it should be.
           (-> {:foo [(constantly 3)]}
-              simple/components
               try-all
-              core/start!)))
+              core/start!))
+
+  (expect nil
+          (-> {:foo (constant 3)}
+              try-all
+              core/start!
+              core/states
+              failing-dependencies))
+
+  (let [processes (-> {:foo (clean (fn [] (/ 1 0)))}
+                      try-all
+                      core/start!)]
+    (expect [[:foo nil]]
+            (failing-dependencies (core/states processes)))
+
+    ; Values that are neither successes nor failures are ignored.
+    (expect nil
+            (failing-dependencies processes))))

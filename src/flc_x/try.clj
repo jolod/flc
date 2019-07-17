@@ -67,8 +67,13 @@
                                                    dep)}))))
                   components))
 
-(defn states->graph
-  "Given the states from processes wrapped in `->try` (e.g. via `try-all`), return a failure graph represented by a map-like sequence, where the keys are the names of the failing components and the values are the names of the dependencies that caused it to fail (or empty if the component itself failed)."
+
+(defn failing-dependencies
+  "Given the states from processes wrapped in `->try` (e.g. via `try-all`), return a failure graph represented by a map-like sequence, where the keys are the names of the failing components and the values are the names of the dependencies that caused it to fail (or empty if the component itself failed).
+
+  Returns nil if all components successfully started.
+
+  Note: only key/value items where the value tests true for `failure?` are considered. An unfortunate consequence of this is that if you pass the return value straight from `start!` and don't extract the states then nil will be returned and your services might have silently failed to start."
   [states]
   (seq (for [[name state] states
              :when (failure? state)
