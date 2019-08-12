@@ -3,10 +3,10 @@
 
   A map-like data structure is typically used because either order is important, the same key can occur multiple times with different values, or both.
 
-  Construction is done using the regular seq functions. For instance, `concat` is the equivalent of `merge`. `count` gives the size (which is different from the number of distinct keys). There is a special `assoc` (and `dissoc`) function that respects order and makes sure there is only one item with the specified key, but if you find that you use `assoc` a lot you should probably use another data structure instead.
+  Construction is done using the regular seq functions. For instance, `concat` corresponds to `merge`. `count` gives the size (which is different from the number of distinct keys). There is a special `assoc` (and `dissoc`) function that respects order and makes sure there is only one item with the specified key, but if you find that you use `assoc` a lot you should probably use another data structure instead.
 
   Maps are preserved as much as possible for performance reasons. That means that if you do an operation that is polymorphic, such as `into`, you probably want to use `seq` or `->map` first so you know what the result will be."
-  (:refer-clojure :exclude [keys vals select-keys update get assoc dissoc]))
+  (:refer-clojure :exclude [keys vals select-keys update get assoc dissoc distinct]))
 
 (defn- -update-nth-seq [xs n f]
   (let [[x & xs'] xs]
@@ -87,3 +87,19 @@
       (if-let [[_ & rev-init] (seq rev-init)]
         (reverse (concat rev-tail [item] (dissoc rev-init k)))
         (concat m [item])))))
+
+(defn distinct
+  "Like `(comp seq ->map)` except it preserves order, i.e. makes the keys distinct and gives precedence to the last item with the same key."
+  [m]
+  (if (map? m)
+    m
+    (->> (if (reversible? m)
+           (rseq m)
+           (reverse m))
+         (reduce (fn [[m seen] [k :as item]]
+                   (if (seen k)
+                     [m seen]
+                     [(conj m item)
+                      (conj seen k)]))
+                 [nil #{}])
+         first)))

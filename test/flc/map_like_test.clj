@@ -11,6 +11,17 @@
   (expect [nil nil 11] (m/update-nth nil 2 (fnil inc 10)))
   (expect [nil nil 11] (m/update-nth [] 2 (fnil inc 10))))
 
+(defexpect test.distinct
+  (expect nil
+          (m/distinct nil))
+  (expect nil
+          (m/distinct '()))
+  (expect [[2 :two]
+           [1 :one-again]]
+          (m/distinct [[1 :one]
+                       [2 :two]
+                       [1 :one-again]])))
+
 #_(defexpect map-like
     (expect [[nil :foo :bar :foo]
              [nil :FOO :BAR :FOO]]
