@@ -87,21 +87,6 @@
                  :env env})
         :results)))
 
-
-
-#_(do
-  (time
-   (doseq [_ (range 100)]
-     (do (reduce #(cons %2 %1) nil (range 1000000))
-         nil)))
-
-  (time
-   (doseq [_ (range 100)]
-     (do (reduce #(conj %1 %2) [] (range 1000000))
-         nil))))
-
-
-
 (defn missing
   "Takes a sequence of `[name names]` where `names` are the dependencies of `name` (such as given by the `dependencies` function). Returns a sequence of `[name missing-names]`, ordered as the input sequence, where `missing-names` is a set of the names that does not occur before `name`.
 
