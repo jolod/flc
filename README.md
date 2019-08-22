@@ -48,13 +48,17 @@ Do we need another component library? Aren't *[component]* and *[integrant]* (or
 
 Well, *flc* does a little more and a little less than *component* and *integrant*. *flc* can be used instead of *[plumatic/graph]* even.
 
-The big selling point of *flc* is that the system is extensible by its open design. *flc* is not a framework like *component* and *integrant*; *flc* is just a collection of functions that you compose. Importantly, you can ad hoc wrap the components to enrich the life cycles.
+The big selling point of *flc* is that the system is extensible by its open design. *flc* is not a framework like *component* and *integrant*; *flc* is just a collection of functions that you compose. The extensibility stems from that *flc* is *very* functional. Not only are lifecycles expressed using functions (in contrast to protocol methods and multimethods), components *are* functions (in contrast to records and keywords, respectively) and the "dependency injection" is just function application.
 
-For instance, with *flc* you can with a simple function add exception handling during start for all your components or logging of the start and stop functions, without changing the source code of the components. You can "import" components from *component* or *integrant*, and then add logging to them.
+Importantly, you can ad-hoc wrap the components to enrich the life cycles. For instance, with *flc* you can with a simple function add exception handling during start for all your components or logging of the start and stop functions, without changing the source code of the components. You can even "import" components from *component* or *integrant*, and then add logging to them. (See also [doc/for-component-users.md] and [doc/for-integrant-users.md])
 
-If you have a slow-running *graph*, where the computations dominate the function invocation overhead, you can use the drop-in replacement library *[flc-x/graph]* and add logging with *flc*. You can also make the computations run in futures to speed up the computation, while also logging.
+If you have a slow-running *[plumatic/graph]*, where the computations dominate the function invocation overhead, you can use the drop-in replacement library *[flc-x/graph]* and add logging with *flc*. You can also make the computations run in futures to speed up the computation, while also logging the progress.
 
 Extensions like these can be stacked, and since wrapping e.g. a *component* component is just another extension, you can take your existing *component* system, turn it into an *flc* system (see `flc-x.component/system`), and then start it as if it was an *flc* system and make use of all the extensions (see below for a partial list), without any change to your existing component code.
+
+## Guides for *component* and *integrant* users
+
+*component* users can look at [doc/for-component-users.md], and *integrant* users can look at [doc/for-integrant-users.md]. There are also source files in the [dev/guide] directory.
 
 ## Description
 
@@ -69,13 +73,13 @@ A sequence of named components can be arranged such that any program that is nee
 
 The primary user-facing functions in *flc* are re-exported through `flc-x.simple` (*[flc-x/simple]*) which satisfies the needs for simple systems. The functions in *flc* make for a flexible core to build more advanced systems with, see *Extensions* below.
 
-See `docs/derivation.md` for a detailed background of the design of this library.
+See [doc/derivation.md] for a detailed background of the design of this library.
 
 ## Extensions
 
 *flc* holds the core functionality, and extra behavior is added ad hoc.
 
-The following extensions modify how programs work.
+The following (non-inclusive) list of extensions modify how programs work:
 
 * [flc-x/log]: Add generic logging to all components.
 * [flc-x/try]: One way of handling exceptions.
@@ -89,7 +93,7 @@ They can all be combined. For instance, you can log an asynchronously started co
 Next, the following extensions provide alternatives to `start!`/`stop!` and thus replace most of `flc.core`. All of the above extensions still work.
 
 * [flc-x/partial]: Start/stop only some components (and their dependencies/dependents).
-* [flc-x/recurrent]: Allow information to carry over between restarts.
+* [flc-x/recurrent]: (Experimental!) Allow information to carry over between restarts.
 
 Other:
 
@@ -297,19 +301,7 @@ If a process does not perform a task by itself (in contrast to e.g. a file watch
 
 ### Keyword arguments
 
-If you have a function that takes a map of both configuration and dependencies, like records in *stuartsierra/component*, then you can use a function like
-
-```clojure
-(defn kw-component [[program init] deps-map]
-  (let [arg-names (keys deps-map)
-        deps (vals deps-map)
-        init-map (into {} init)
-        p (fn [& args]
-            (program (into init-map (map vector arg-names args))))]
-    [p deps]))
-```
-
-to be able to write components like
+If you have a function that takes a map of both configuration and dependencies, like records in *stuartsierra/component*, then you can use `component` from *[flc-x/kw-args]*. You can then write
 
 ```clojure
 (defn jetty [{:keys [port handler]}]
@@ -318,7 +310,7 @@ to be able to write components like
 
 (def components
   {:handler ...
-   :webserver (kw-component [jetty {:port 8080}] {:handler :handler})})
+   :webserver (kw-args/component jetty {:port 8080} {:handler :handler})})
 ```
 
 You can freely move arguments between configuration and dependency, e.g.
@@ -327,111 +319,8 @@ You can freely move arguments between configuration and dependency, e.g.
 (def components
   {:handler ...
    :webserver/port [#(process 8080)]
-   :webserver (kw-component [jetty] {:port :webserver/port
-                                     :handler :handler})})
+   :webserver (kw-component jetty {} {:port :webserver/port, :handler :handler})})
 ```
-
-I encourage you to come up with your own DSL. For instance, I would replace `{:webserver/port [#(process 8080)]}` with either `{:webserver/port (constant 8080)}` if I predominantely use maps, or `[(constant :webserver/port 8080)]` if I use sequences.
-
-### Relationship to *component* and *integrant*
-
-You can easily write an adapter for components defined using the `Lifecycle` protocol in *[component]*. We already have a function to handle keyword arguments above, so we can write
-
-```clojure
-; Assume the component library is required as sierra.
-; kw-component as above.
-
-(defn sierra-component [component]
-  (kw-component [(fn [m]
-                   (process (sierra/start (merge component m))
-                            sierra/stop))]
-                (sierra/dependencies component)))
-
-(def components
-  {:handler ...
-   :webserver (sierra-component (sierra/using (map->Jetty {:port 8080}) [:handler]))})
-```
-
-assuming you have a `Jetty` record that implements `Lifecycle`.
-
-Similarly an adapter for [integrant] can be written. *integrant* also supports `suspend!` and `resume!`. You can in fact encode this too ad hoc, but it does not necessarily compose with other extensions. One way to do it is to have processes return three values there the third value next to the state and the stop function is the suspend function. (The third value will just be ignored by all other functions.) You can write a wrapper that provides a default suspend function and apply that to the whole system to not have to rewrite existing components. Just like the start function returns a stop function, the suspend function should return a resume function that looks just like the start function. It would look something like this:
-
-```clojure
-(defn with-default-suspend [start]
-  (fn p [& args]
-    (let [{:as process :keys [stop suspend]} (apply start args)]
-      (assoc process :suspend (or suspend (fn [] (stop) p))))))
-
-(defn suspend! [started]
-  (reduce (fn [suspended [name {:keys [suspend]}]]
-            (cons [name (suspend)] suspended))
-          nil
-          started))
-
-(defn resume! [components suspended]
-  (let [resumer (into {} suspended)]
-    (start! (for [[name [_ deps]] components]
-              [name [(resumer name) deps]]))))
-```
-
-Note that the resume function must produce something that can be suspended; this is why the resume function returns `p` in `with-default-suspend`. It is probably a good idea to create a lifecycle function that takes four arguments, `start`, `stop`, `resume`, and `suspend` to encode this recursion. It's not pretty:
-
-```clojure
-(defn lifecycle' [start stop suspend resume]
-  (fn [& args]
-    (let [p (fn p [state]
-              {:state state
-               :stop #(stop state)
-               :suspend (fn []
-                          (let [suspended-state (suspend state)]
-                            (fn [& new-args]
-                              (p (if (= new-args args)
-                                   (resume suspended-state)
-                                   (apply start new-args))))))})]
-      (p (apply start args)))))
-```
-
-I'm not so sure this is a good approach though, which is why it is only written here in the documentation as an example.
-
-A better approach is probably to partially start/stop the system, and invert the dependencies.
-
-### Partial start/stop
-
-Partial start/stop requires you to know which components that have been started, and this is handled in *[flc-x/partial]*.
-
-Here is how I would handle the *integrant* example in *flc*.
-
-```clojure
-; https://github.com/weavejester/integrant#suspending-and-resuming
-
-(defn constant [x]
-  (-> {:dummy x} constants :dummy)) ; Silly.
-
-(defn webserver [opts]
-  (lifecycle (fn []
-               (let [handler (atom (promise))
-                     options (-> opts (assoc :join? false))]
-                 {:handler handler
-                  :server (jetty/run-jetty #(@@handler %) options)}))
-             #(.stop (:server %))))
-
-(defn web-app [webserver handler]
-  (deliver @(:handler webserver) handler)
-  (process webserver
-           #(update % :handler reset! (promise))))
-
-(def system
-  {:webserver/options (constant {:port 8080})
-   :webserver (component webserver [:webserver/options])
-   :handler (constant (fn [_] (resp/response "Hello, world!")))
-   :web-app (component web-app [:webserver :handler])})
-```
-
-Here I have changed around the dependencies. The webserver does not depend on a handler; instead, the web app installs the handler and if the handler is updated (meaning it is first stopped, then replaced with a new value, and then started) then when the web-app is restarted the new handler is installed.
-
-Notice how this change means that we do not need to encode special logic for realizing if we need to restart the webserver or not. The options are passed in as a dependency, so if we want to change the port we will necessarily stop the webserver and then restart it.
-
-A downside is that we need to encode this logic explicitly. In *integrant* we can add this without changing the structure of the system. That is a double edged sword though, if we happen to encode a bug in the suspend/resume logic. By inverting the dependencies no extra logic is added, and thus less room for bugs.
 
 ### Custom DSLs
 
@@ -441,7 +330,7 @@ There is another good reason for not providing too much out of the box. It encou
 
 ### Migrating away from *flc*
 
-If you don't use any extensions then *flc* is mostly useful during development. For a production build you might want to get rid of the dependency on *flc'.
+If you don't use any extensions then *flc* is mostly useful during development. For a production build you might want to get rid of the dependency on *flc*.
 
 In that case, if you are only effectively using `process`, `lifecycle`, and `start!`, then you can rewrite the following,
 
@@ -526,3 +415,9 @@ your option) any later version.
 [flc-x/component]: src/flc_x/component.clj
 [flc-x/let-start]: src/flc_x/let_start.clj
 [flc-x/kw-args]: src/flc_x/kw_args.clj
+[flc-x/graph]: src/flc_x/graph.clj
+
+[doc/derivation.md]: doc/derivation.md
+[doc/for-component-users.md]: doc/for-component-users.md
+[doc/for-integrant-users.md]: doc/for-integrant-users.md
+[dev/guide]: dev/guide

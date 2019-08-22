@@ -189,7 +189,7 @@ Next, move the arguments to the tree `add`s into a map, and then use a function 
     started))
 ```
 
-In practice you would use a function
+In practice you would use a function like
 
 ```clojure
 (defn component [f & deps]
@@ -262,6 +262,14 @@ Here is the complete code we ended up with:
 ;                 :jetty [jetty [:handler]]}))
 ```
 
+## A note on `topo-sort`
+
+Note that once `start!` was rewritten to take an argument, we just instantly call `topo-sort` on the input before using it. `start!` is effectively a composition of `topo-sort` and the rest of `start!`. So, it would make sense to factor out "the rest" of `start!`, so that `topo-sort` is optional, and the input can be a sequence instead of a map.
+
+This, taken even one step further, leads you to two aspects of *flc* that is not immediately apparent: `let-like` and `map-like`.
+
+`let-like` only solves the "dynamic let" problem, and `map-like` deals with seqables (including seqs, vectors, and maps) while treating them as a map.
+
 ## Liberating yourself from dependencies
 
 It is easy to ignore the library and revert back to the old way of doing it, using `let` and destructuring. In particular, if you do not care about stopping the system, you can just do:
@@ -276,7 +284,7 @@ It is easy to ignore the library and revert back to the old way of doing it, usi
 
 which reuses all your logic for creating the components but does not need any library.
 
-In practice you would write your `database`, `handler`, and `jetty` functions to use another function than `vector` to return the value, and this function enables you to use all of `flc` if you want to, and then instead of importing from `flc` you define it yourself and make is synonymous with `vector`.
+In practice it is slightly more involved since you use the functions in `flc.program` to write the `database`, `handler`, and `jetty` functions (see below); this gives you a map instead of a vector. However, it is just *slightly* more involved, since you can just supply your own definitions (it would typically just be two or perhaps three functions, and might even be just one) and make them actually return vectors instead.
 
 ## A note on configuration
 
@@ -294,7 +302,7 @@ You presumably do not want to have the database URI or the webserver port to be 
 
 ## Composability
 
-For reasons that will become clear below, I will require the stop function to be nullary and thus already know the state. But this will be useful later when we want to write higher-order life cycles.
+For reasons that will become clear below, I will require the stop function to be nullary and thus already know the state (i.e. be a closure). But this will be useful later when we want to write higher-order life cycles.
 
 ```clojure
 (defn jetty [port]
@@ -347,7 +355,7 @@ Here we also see why it is useful to bind the state to the stop function early. 
 ```clojure
 (fn []
   (let [[state stop] @p]
-    (stop @state)))
+    (stop (deref state)))) ; # `deref` is the inverse of `future`.
 ```
 
 However, it is not always possible to have an inverse function to transform the state back into what the original stop function expects.
