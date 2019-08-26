@@ -252,7 +252,7 @@ Here we create new functions (what in *flc* are called programs) by simply creat
 
 ## Suspending and resuming
 
-The previous section served as an introduction to the "advanced" technique of wrapping programs. I will now show how it can be done to add suspend/resume behavior to *flc* ad hoc. (See *dev/guide.integrant_suspend.clj* for a full example).
+The previous section served as an introduction to the "advanced" technique of wrapping programs. I will now show how it can be done to add suspend/resume behavior to *flc* ad hoc. (See [dev/guide/integrant_suspend.clj] for a full example).
 
 ```clojure
 (defn suspendable
@@ -354,3 +354,5 @@ This is a non-issue in *flc*.
 [flc-x/let-start]: ../src/flc_x/let_start.clj
 [flc-x/kw-args]: ../src/flc_x/kw_args.clj
 [flc.map-like]: ../src/flc/map_like.clj
+
+[dev/guide/integrant_suspend.clj]: ../dev/guide/integrant_suspend.clj

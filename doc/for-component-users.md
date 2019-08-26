@@ -1,6 +1,6 @@
 # *flc* for *component* users
 
-This is a guide written for users experienced with *[component]*. See also [dev/guide/component](dev/guide/component).
+This is a guide written for users experienced with *[component]*. See also [dev/guide/component](../dev/guide/component/component.clj).
 
 [component]: https://github.com/stuartsierra/component
 
