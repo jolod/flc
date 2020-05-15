@@ -2,6 +2,8 @@
 
 *flc* is a functional formulation of life cycles, sporting ad hoc logging (*[flc-x/log]*), exception handling (*[flc-x/try]*), asynchronous start (*[flc-x/future]*), etc, and with minimal effort the dependency on `flc.core` can be removed. Through adapters you can mix and match components from *[stuartsierra/component][component]* and *[weavejester/integrant][integrant]*, this too, ad hoc.
 
+The start and stop sequences are deterministic, predictable, and user specifiable.
+
 ## Synopsis
 
 (Adapted from [James Reeve's presentation on Integrant](https://skillsmatter.com/skillscasts/9820-enter-integrant-a-micro-framework-for-data-driven-architecture-with-james-reeves).)
@@ -40,6 +42,7 @@
 
 ; (my-start! {:database {:uri "jdbc:sqlite:"}
 ;             :webserver {:port 8080}})
+; ; If my-start! is called again then it first stops the system.
 ```
 
 ## Rationale
@@ -55,6 +58,8 @@ Importantly, you can ad-hoc wrap the components to enrich the life cycles. For i
 If you have a slow-running *[plumatic/graph]*, where the computations dominate the function invocation overhead, you can use the drop-in replacement library *[flc-x/graph]* and add logging with *flc*. You can also make the computations run in futures to speed up the computation, while also logging the progress.
 
 Extensions like these can be stacked, and since wrapping e.g. a *component* component is just another extension, you can take your existing *component* system, turn it into an *flc* system (see `flc-x.component/system`), and then start it as if it was an *flc* system and make use of all the extensions (see below for a partial list), without any change to your existing component code.
+
+*flc* is designed to be predictable, so if you want the components to start in a certain order, then *flc* will respect that order unless it is an illegal order.
 
 ## Guides for *component* and *integrant* users
 

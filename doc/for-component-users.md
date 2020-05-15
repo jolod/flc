@@ -183,7 +183,7 @@ Below I compare the differences between the *component* and *flc* versions.
 
 ### Stopping modified components
 
-We immediately notice that *flc* separates started components from the recipe for starting them. A benefit to this is that if you change your *component* record while it is started, then the new stop method would be called but with the old record value. In *flc*, the stop function that is called is the one that was defined during start. If you want to patch the stop behavior while running, the *component* way is what you want. If you want to evolve a component while it is running, then the *flc* way is what you want.
+We immediately notice that *flc* separates started components from the recipe for starting them. In *flc*, the stop function that is called is the one that was defined during start. In contrast, if you change your *component* record while it is started, then the **new** stop method would be called but with the **old** record value. If you want to patch the stop behavior while running, the *component* way is what you want. If you want to evolve a component while it is running, then the *flc* way is what you want.
 
 ### Configuration
 

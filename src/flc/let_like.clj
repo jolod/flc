@@ -8,7 +8,7 @@
 
   Returns a tuple of sorted nodes and a map of ambiguous nodes. The keys in the map are the nodes that could not be sorted, either because they have a node (transitively) pointing to them which is not defined in the input, or because they are part of a cycle. The values are the corresponding `incoming` values (turned into sets).
 
-  Example: `[[:x], [:xy [:z :y :x]], [:y], [:rec [:rec]], [:foo [:bar]]]` becomes `[[:x :y :z :xy], {:rec #{:rec} :foo #{:bar}}]`."
+  Example: `[[:x], [:z], [:xy [:y :x]], [:y], [:rec [:rec]], [:foo [:bar]]]` becomes `[[:x :z :y :xy], {:rec #{:rec} :foo #{:bar}}]`."
   [incoming-adjacents]
   (let [node->incoming (m/->map (m/fmap set incoming-adjacents))
         node->outgoing (apply merge-with

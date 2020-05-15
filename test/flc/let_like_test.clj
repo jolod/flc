@@ -68,3 +68,7 @@
              [:x #{}]]
             (missing (dependencies bindings)))
     (expect (complete? bindings))))
+
+(defexpect -example-from-documentation
+  (expect [[:x :z :y :xy], {:rec #{:rec} :foo #{:bar}}]
+          (stable-dependency-sort [[:x], [:z], [:xy [:y :x]], [:y], [:rec [:rec]], [:foo [:bar]]])))
