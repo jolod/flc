@@ -5,5 +5,7 @@
 
 (defn component [program init deps-map]
   (component/component (fn kw-program [& args]
-                         (program (into init (map vector (m/keys deps-map) args))))
+                         (program (into init (map vector
+                                                  (m/keys deps-map)
+                                                  args))))
                        (m/vals deps-map)))

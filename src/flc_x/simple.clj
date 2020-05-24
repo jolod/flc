@@ -14,7 +14,7 @@
 (def constants core/constants)
 
 (defn components
-  "Takes a map-like sequence where sequential values are assumed to be on the form `[program deps ...]`, and are assumed to be components otherwise, and returns a map-like sequence components. The values following the program will be flattened one level and concatenated. In particular, both `[program :foo :bar]` and `[program [:foo :bar]]` work. Thus, this function can be used to ''normalize'' ways of writing components.
+  "Takes a map-like sequence with [name component] elements where `component` is either a component or on the form `[program deps ...]`, and returns a map-like sequence components. The values following the program will be flattened one level and concatenated. In particular, both `[program :foo :bar]` and `[program [:foo :bar]]` work. Thus, this function can be used to ''normalize'' ways of writing components.
 
   For consistency and predictability also `[program [:foo] :bar]`, `[program [:foo] [:bar]]` etc work. While you could do `[program [[:foo] :bar]] to depend on components `[:foo]` and `:bar`, this is not the intended use. If you have a component named by a collection then for clarity prefer to use flc.component/component directly or write another high-level function more suited to your use case."
   [comps]

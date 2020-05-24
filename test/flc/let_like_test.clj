@@ -69,6 +69,12 @@
             (missing (dependencies bindings)))
     (expect (complete? bindings))))
 
-(defexpect -example-from-documentation
+(defexpect -examples-from-documentation
+  (let [example [[[[:x nil] [:y [:x]]], [[:x #{}] [:y #{}]]]
+                 [[[:y [:x]]], [[:y #{:x}]]]
+                 [[[:x nil] [:x [:x]]], [[:x #{}] [:x #{}]]]]]
+    (expect example
+            (for [[input] example]
+              [input (missing input)])))
   (expect [[:x :z :y :xy], {:rec #{:rec} :foo #{:bar}}]
           (stable-dependency-sort [[:x], [:z], [:xy [:y :x]], [:y], [:rec [:rec]], [:foo [:bar]]])))

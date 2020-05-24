@@ -1,5 +1,5 @@
 (ns flc.process
-  "A process is a map with keys `:state` and `:stop` where `:state` `holds any value and `:stop` holds an nullary function performed for side effects. The return value is unspecified, and can be exploited if desired.")
+  "A process is data structure which holds an arbitrary value, `state`, and a nullary function, `stop`, which is performed for side effects. The return value of the stop function is unspecified, and can be utilized if desired.")
 
 (defn process*
   "Returns a process with the specified state and stop function. `stop` default to `(fn [])`."

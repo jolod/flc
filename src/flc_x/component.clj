@@ -1,5 +1,5 @@
 (ns flc-x.component
-  "This namespace will be moved to flc-x/component."
+  "This namespace will be moved to flc-x/adapter.component."
   (:require [flc.program :as program]
             [flc.map-like :as m]
             [flc-x.kw-args :as kw-args]

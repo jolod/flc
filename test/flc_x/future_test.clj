@@ -9,9 +9,8 @@
 
 (defn slow-constant' [name x dt]
   [name [(fn []
-           (process*
-            (do (Thread/sleep dt)
-                x)))]])
+           (Thread/sleep dt)
+           (process* x))]])
 
 (defexpect flc.future-test
   (let [dt 0]

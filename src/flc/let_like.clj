@@ -49,9 +49,9 @@
   (m/fmap second computations))
 
 (defn arrange
-  "Sorts a map-like sequence of computations into a sequence that can be executed sequentially. A computation has the form `[name [f deps]]` where `name` is any value, `f` is a function and `deps` is a sequence of names refering to other computations. (If there are more than one computation with the same name, then all but the last of them are discarded.)
+  "Sorts a map-like sequence of computations into a sequence that can be executed sequentially. A computation has the form `[name [f deps]]` where `name` is any value, `f` is a function and `deps` is a sequence of names refering to other computations. If there are more than one computation with the same name, then all but the last are discarded.
 
-  The order of computations is preserved as much as possible, so if the sequence of computations are already listed in a way that would work in a `let` binding then that order is preserved. If not then dependencies are ''moved up'' as much as needed. This yields predictable execution sequences. (If a map is passed then there is no guarentee on the order, other than that dependencies will occur before they are needed.)
+  The order of computations is preserved as much as possible, so if computations are already ordered in a way that would work in a `let` binding then that order is preserved. If not then dependencies are ''moved up'' as much as needed. This yields predictable execution sequences. (If a map is passed then there is no guarentee on the order, other than that dependencies will occur before they are needed.)
 
   If there are any circular or missing dependencies then an exception is thrown. `ex-data` of the exception contains all computations that could be sorted in `:sorted` and a map of the problematic dependencies is in `:ambiguous` and the full dependency sequence is in `:dependencies`."
   [computations]
@@ -93,7 +93,7 @@
   Examples
 
       [[:x nil], [:y [:x]]] => [[:x #{}], [:y #{}]]
-      [[:x nil], [:y [:x]]] => [[:y #{:x}]]
+      [          [:y [:x]]] => [          [:y #{:x}]]
       [[:x nil], [:x [:x]]] => [[:x #{}], [:x #{}]]
 
   The last example shows that shadowing is supported."

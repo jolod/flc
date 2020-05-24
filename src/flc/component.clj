@@ -1,5 +1,4 @@
-(ns flc.component
-  (:require [flc.map-like :as m]))
+(ns flc.component)
 
 (defn component
   ([program]
