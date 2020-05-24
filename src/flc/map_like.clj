@@ -3,9 +3,9 @@
 
   A map-like data structure is typically used because either order is important, the same key can occur multiple times with different values, or both.
 
-  Construction is done using the regular seq functions. For instance, `concat` corresponds to `merge`. `count` gives the size (which is different from the number of distinct keys). There is a special `assoc` (and `dissoc`) function that respects order and makes sure there is only one item with the specified key, but if you find that you use `assoc` a lot you should probably use another data structure instead.
+  Construction is done using the regular seq functions. For instance, `concat` corresponds to `merge`. `count` gives the size (which is different from the number of distinct keys). There is a special `assoc` function that respects order and makes sure there is only one item with the specified key, but if you find that you use `assoc` a lot you should probably use another data structure instead. There is also `dissoc` which removes all items with the specified key, and `select-keys`, which removes all items except those with the specified keys. These functions, if gives a map, will just call the corresponding function in `clojure.core`. There is also `distinct` which makes sure that there is only one item per key, while order is preserved.
 
-  Maps are preserved as much as possible for performance reasons. That means that if you do an operation that is polymorphic, such as `into`, you probably want to use `seq` or `->map` first so you know what the result will be."
+  Maps are preserved as much as possible for performance reasons. That means that if you use a map-like data structure with a polymorphic function, such as `into`, you probably want to use `seq` or `->map` first so you know what the result of `into` will be."
   (:refer-clojure :exclude [keys vals select-keys update get assoc dissoc distinct]))
 
 (defn- -update-nth-seq [xs n f]
@@ -14,9 +14,12 @@
       (cons x (-update-nth-seq xs' (dec n) f))
       (cons (f x) xs'))))
 
-(defn update-nth [xs n f]
-  {:pre [(or (sequential? xs)
-             (nil? xs))]}
+(defn update-nth
+  "Like `clojure.core/update` with an integer key, but works on non-associative sequential types. If the key (index) does not exist, then it is created and `nil` is given to `f`."
+  [xs n f]
+  {:pre [(and (or (sequential? xs)
+                  (nil? xs))
+              (not (neg? n)))]}
   (if (and (associative? xs)
            (counted? xs)
            (< n (count xs)))
@@ -49,7 +52,7 @@
     (map #(update-nth % 1 f) map-like)))
 
 (defn fmap-keyed
-  "Applies `f` to the value of every item in the map-like data structure `map-like`."
+  "Applies the binary function `f` to the key and value of every item in the map-like data structure `map-like`, and the return value of `f` replaces the value in the argument map."
   [f map-like]
   (if (map? map-like)
     (reduce-kv #(clojure.core/assoc %1 %2 (f %2 %3)) {} map-like)
@@ -66,8 +69,10 @@
     (seq (map second m))))
 
 (defn select-keys [m ks]
-  (let [ks (set ks)]
-    (filter #(contains? ks (first %)) m)))
+  (if (map? m)
+    (clojure.core/select-keys m ks)
+    (let [ks (set ks)]
+      (filter #(contains? ks (first %)) m))))
 
 (defn dissoc
   "Removes all items with the specified key."
@@ -103,3 +108,15 @@
                       (conj seen k)]))
                  [nil #{}])
          first)))
+
+#_(defn get
+    "Like `(clojure.core/get (->map m) k v))` where `v` defaults to `nil`."
+    ([m k]
+     (get m k nil))
+    ([m k v]
+     (if (map? m)
+       (clojure.core/get m k v)
+       (-> (or (seq (select-keys m [k]))
+               [[k v]])
+           last
+           second))))

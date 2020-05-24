@@ -3,7 +3,8 @@
   (:require [flc.map-like :as m]))
 
 (defexpect test.update-nth
-  (expect [1 1] (m/update-nth (range 2) -1 inc))
+  (expect Error (m/update-nth [] -1 (constantly :foo)))
+  (expect [nil :foo] (m/update-nth [] 1 (constantly :foo)))
   (expect [1 1] (m/update-nth (range 2) 0 inc))
   (expect [0 2] (m/update-nth (range 2) 1 inc))
   (expect [0 1 11] (m/update-nth (range 2) 2 (fnil inc 10)))
@@ -21,6 +22,20 @@
           (m/distinct [[1 :one]
                        [2 :two]
                        [1 :one-again]])))
+
+#_(defexpect test.get
+    (expect nil
+            (m/get [] :foo))
+    (expect 10
+            (m/get [[:foo 10 11]] :foo))
+    (expect ::missing
+            (m/get [[:foo 10 11]] :bar ::missing))
+    (expect 20
+            (m/get [[:foo 10] [:foo 20]] :foo)))
+
+(defexpect test.select-keys
+  (expect '()
+          (m/select-keys nil [])))
 
 #_(defexpect map-like
     (expect [[nil :foo :bar :foo]
