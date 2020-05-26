@@ -1,6 +1,6 @@
 # flc - functional life cycles
 
-*flc* is a functional formulation of life cycles, sporting ad hoc logging (*[flc-x/log]*), exception handling (*[flc-x/try]*), asynchronous start (*[flc-x/future]*), etc, and with minimal effort the dependency on `flc.core` can be removed. Through adapters you can mix and match components from *[stuartsierra/component][component]* and *[weavejester/integrant][integrant]*, this too, ad hoc.
+*flc* is a functional formulation of life cycles, sporting ad hoc logging (*[flc-x/log]*), exception handling (*[flc-x/try]*), asynchronous start (*[flc-x/future]*), etc, and with minimal effort the dependency on `flc.*` can be removed. Through adapters you can mix and match components from *[stuartsierra/component][component]* and *[weavejester/integrant][integrant]*, this too, ad hoc.
 
 The start and stop sequences are deterministic, predictable, and user specifiable.
 
@@ -12,6 +12,7 @@ The start and stop sequences are deterministic, predictable, and user specifiabl
 (ns synopsis
   (:require [flc.program :refer [lifecycle]]
             [flc.process :refer [process]]
+            [flc.component :refer [component]]
             [flc.core :refer [start! stop!]]
             ...))
 
@@ -28,9 +29,9 @@ The start and stop sequences are deterministic, predictable, and user specifiabl
              #(.stop %)))
 
 (defn system [config]
-  {:database [(database (:database config))]
-   :handler [handler' [:database]]
-   :webserver [(jetty (:webserver config)) [:handler]]})
+  {:database (component (database (:database config)))
+   :handler (component handler' [:database])
+   :webserver (component (jetty (:webserver config)) [:handler])})
 
 (def processes
   (atom nil))

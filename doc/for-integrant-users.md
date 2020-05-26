@@ -227,7 +227,7 @@ If desired, the `:const.name` item in the map can be calculated from the rest of
 
 ## Prepping
 
-Since you in *flc* have control of all the data and implementations all the way, you can prep either the configuration itself, prep when building the system, or even prep one the system has been built. For instance, since `jetty` and `greet` above are just functions you can always prep *after* the system has been created. That last one might require some explanation.
+Since you in *flc* have control of all the data and implementations all the way, you can prep either the configuration itself, prep when building the system, or even prep once the system has been built. For instance, since `jetty` and `greet` above are just functions you can always prep *after* the system has been created. That last sentence might require some explanation.
 
 If assuming that all your components use keyword arguments (i.e. takes a single map as argument), you can do
 
